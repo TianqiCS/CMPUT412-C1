@@ -25,31 +25,33 @@ def approxEqual(a, b, tol = 0.02):
 ##call_back functions
 
 def PC2_callback(msg):
-    global g_centroid, g_std_dist
+    global g_x, g_z, g_std_dist
     
     # Initialize the centroid coordinates point count
     x = y = z = n = 0
-    g_centroid = {}
 
     # Read in the x, y, z coordinates of all points in the cloud
     for point in point_cloud2.read_points(msg, skip_nans=True):
         pt_x = point[0]
-        pt_y = point[1]
+        #pt_y = point[1]
         pt_z = point[2]
 
         x += pt_x
-        y += pt_y
+        #y += pt_y
         z += pt_z
         n += 1
 
     if n > 0:
         x /= n
-        y /= n
+        #y /= n
         z /= n
 
-        g_centroid['x'] = x
-        g_centroid['y'] = y
-        g_centroid['z'] = z
+        g_x = x
+        #g_centroid['y'] = y
+        g_z = z
+    else:
+        g_x = 0
+        g_z = 0
 
 ##
 
@@ -94,7 +96,7 @@ class Follow(smach.State):
 
     def execute(self, userdata):
 
-        global g_centroid, g_cmd_vel_pub, g_std_dist
+        global g_cmd_vel_pub, g_std_dist, g_x, g_z
 
         decelerate_factor = 0.9
         accelerate_factor = 0.5
@@ -103,11 +105,11 @@ class Follow(smach.State):
         stop_dist = 0.7
 
         while True:
-            if g_centroid:
+            if g_x!=0 or g_z!=0:
                 # Check our movement thresholds
-                if (abs(g_centroid['z'] - g_std_dist) > self.z_threshold):
+                if (abs(g_z - g_std_dist) > self.z_threshold):
                     # Compute the angular component of the movement
-                    linear_speed = (g_centroid['z'] - g_std_dist) * self.z_scale
+                    linear_speed = (g_z - g_std_dist) * self.z_scale
                     
                     # Make sure we meet our min/max specifications
                     self.move_cmd.linear.x = copysign(max(self.min_linear_speed, 
@@ -115,9 +117,9 @@ class Follow(smach.State):
                 else:
                     self.move_cmd.linear.x *= self.slow_down_factor
                     
-                if (abs(g_centroid['x']) > self.x_threshold):     
+                if (abs(g_x) > self.x_threshold):     
                     # Compute the linear component of the movement
-                    angular_speed = -g_centroid['x'] * self.x_scale
+                    angular_speed = -g_x * self.x_scale
                     
                     # Make sure we meet our min/max specifications
                     self.move_cmd.angular.z = copysign(max(self.min_angular_speed, 
@@ -125,14 +127,16 @@ class Follow(smach.State):
                 else:
                     # Stop the rotation smoothly
                     self.move_cmd.angular.z *= self.slow_down_factor
+                
 
             else:
                 # Stop the robot smoothly
                 self.move_cmd.linear.x *= self.slow_down_factor
                 self.move_cmd.angular.z *= self.slow_down_factor
 
-            print g_centroid
-            #g_cmd_vel_pub.publish(self.move_cmd)
+            #print g_centroid
+            print g_x, g_z
+            g_cmd_vel_pub.publish(self.move_cmd)
 
         return 'end'
 
@@ -140,10 +144,9 @@ class Follow(smach.State):
 ##
 
 def main():
-    global g_cmd_vel_pub, g_std_dist, g_centroid
+    global g_cmd_vel_pub, g_std_dist
 
     g_std_dist = 0.8
-    g_centroid = {}
 
     rospy.init_node('follow_bot')
     rospy.Subscriber("point_cloud", PointCloud2, PC2_callback, queue_size=1)
@@ -172,5 +175,6 @@ def main():
 if __name__ == '__main__':
     g_cmd_vel_pub = None
     g_std_dist = None
-    g_centroid = None
+    g_x = None
+    g_z = None
     main()
