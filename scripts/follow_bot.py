@@ -3,18 +3,12 @@ import rospy
 import smach
 import smach_ros
 import math
-import ctypes
-import struct
 import time
 from math import copysign
-#import numpy as np
-from kobuki_msgs.msg import BumperEvent, Led
-from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
-from tf.transformations import euler_from_quaternion
 
 from sensor_msgs import point_cloud2
-from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import PointCloud2, Joy
 
 ## Util Function
 
@@ -24,11 +18,16 @@ def approxEqual(a, b, tol = 0.02):
 
 ##call_back functions
 
+def joy_callback(joy_msg):
+    global g_running
+    if joy_msg.buttons[5] == 1:
+        g_running = not g_running
+
 def PC2_callback(msg):
     global g_x, g_z, g_std_dist
     
     # Initialize the centroid coordinates point count
-    x = y = z = n = 0
+    x = z = n = 0
 
     # Read in the x, y, z coordinates of all points in the cloud
     for point in point_cloud2.read_points(msg, skip_nans=True):
@@ -57,12 +56,36 @@ def PC2_callback(msg):
 
 ## State Class
 
+class Wait(smach.State):
+    
+    def __init__(self):
+
+        smach.State.__init__(self, 
+                             outcomes=['start'])
+
+    def execute(self, userdata):
+        global g_running
+        while not g_running:
+            pass
+        return 'start'
+
+class Search(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, 
+                             outcomes=['follow'])
+
+    def execute(self, userdata):
+        while g_z == 0:
+            pass
+        return 'follow'    
+        
+
 class Follow(smach.State):
     
     def __init__(self):
 
         smach.State.__init__(self, 
-                             outcomes=['end'])
+                             outcomes=['wait', 'search'])
 
         self.move_cmd = Twist()
         
@@ -96,15 +119,9 @@ class Follow(smach.State):
 
     def execute(self, userdata):
 
-        global g_cmd_vel_pub, g_std_dist, g_x, g_z
+        global g_cmd_vel_pub, g_std_dist, g_running, g_x, g_z
 
-        decelerate_factor = 0.9
-        accelerate_factor = 0.5
-        angular_factor = 0.8
-        
-        stop_dist = 0.7
-
-        while True:
+        while g_running:
             if g_x!=0 or g_z!=0:
                 # Check our movement thresholds
                 if (abs(g_z - g_std_dist) > self.z_threshold):
@@ -130,25 +147,31 @@ class Follow(smach.State):
                 
 
             else:
+                return 'search'
                 # Stop the robot smoothly
-                self.move_cmd.linear.x *= self.slow_down_factor
-                self.move_cmd.angular.z *= self.slow_down_factor
+                #self.move_cmd.linear.x *= self.slow_down_factor
+                #self.move_cmd.angular.z *= self.slow_down_factor
 
             #print g_centroid
-            print g_x, g_z
+            #print g_x, g_z
             g_cmd_vel_pub.publish(self.move_cmd)
 
-        return 'end'
+        return 'wait'
 
 
 ##
 
 def main():
-    global g_cmd_vel_pub, g_std_dist
+    global g_cmd_vel_pub, g_std_dist, g_running
 
     g_std_dist = 0.8
+    g_running = True
 
     rospy.init_node('follow_bot')
+
+    g_cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=1)
+
+    rospy.Subscriber("joy", Joy, joy_callback)
     rospy.Subscriber("point_cloud", PointCloud2, PC2_callback, queue_size=1)
     rospy.loginfo("Subscribing to point cloud...")
     
@@ -157,13 +180,16 @@ def main():
 
     rospy.loginfo("Ready to follow!")
 
-    g_cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=1)
-
     sm = smach.StateMachine(outcomes=['end'])
 
     with sm:
+        smach.StateMachine.add('Wait', Wait(),
+                                transitions = {'start':'Search'})
+        smach.StateMachine.add('Search', Search(),
+                                transitions = {'follow':'Follow'})
         smach.StateMachine.add('Follow', Follow(),
-                                transitions={'end':'end'})  
+                                transitions = {'wait':'Wait',
+                                               'search': 'Search'})  
 
     outcome = sm.execute()
 
@@ -173,8 +199,13 @@ def main():
     return
 
 if __name__ == '__main__':
-    g_cmd_vel_pub = None
-    g_std_dist = None
-    g_x = None
-    g_z = None
-    main()
+    try:
+        g_cmd_vel_pub = None
+        g_std_dist = None
+        g_running = None
+        g_x = None
+        g_z = None
+        main()    
+    except rospy.ROSInterruptException:
+        pass
+    

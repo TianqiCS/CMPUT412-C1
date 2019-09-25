@@ -3,6 +3,8 @@
     <include file="$(find turtlebot_bringup)/launch/3dsensor.launch"/>
 
     <node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen" />
+    
+    <node pkg="joy" name="joy_node" type="joy_node" />
 
     <!-- Run a VoxelGrid filter on the z axis -->
     <node pkg="nodelet" type="nodelet" name="voxel_grid_z" args="load pcl/VoxelGrid pcl_manager" output="screen">
