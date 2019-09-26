@@ -36,9 +36,13 @@
         <remap from="~input" to="/x_filtered" />
         <remap from="~output" to="/search_cloud" />
         <rosparam>
-            filter_field_name: y
+            <!-- filter_field_name: y
             filter_limit_min: -0.5
             filter_limit_max: -0.1
+            filter_limit_negative: False -->
+            filter_field_name: y
+            filter_limit_min: -0.1
+            filter_limit_max: 0.3
             filter_limit_negative: False
         </rosparam>
     </node>
