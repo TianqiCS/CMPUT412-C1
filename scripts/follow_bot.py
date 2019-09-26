@@ -105,7 +105,7 @@ class Search(smach.State):
         smach.State.__init__(self, 
                              outcomes=['follow'])
         self.move_cmd = Twist()
-        self.move_cmd.angular.z = 3.0
+        self.move_cmd.angular.z = 1.5
 
     def execute(self, userdata):
         global g_cmd_vel_pub

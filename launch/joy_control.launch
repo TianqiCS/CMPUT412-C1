@@ -1,0 +1,15 @@
+<launch>
+  <include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
+  <include file="$(find turtlebot_bringup)/launch/3dsensor.launch"/>
+ <!-- Turtlesim Node-->
+
+ <!-- joy node -->
+  <node pkg="joy" name="joy_node" type="joy_node" />
+
+ <!-- Axes -->
+  <param name="axis_linear" value="1" type="int"/>
+  <param name="axis_angular" value="0" type="int"/>
+  <param name="scale_linear" value="2" type="double"/>
+  <param name="scale_angular" value="2" type="double"/>
+  <node pkg="follow_bot" type="joy_control.py" name="joy_control" output="screen"/>
+</launch>
