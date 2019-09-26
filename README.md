@@ -35,10 +35,10 @@ Follow state: It will follow the target as expected`
 
 
 
-- ***Concepts and Stratege***
+- ***Concepts and Strategy***
 	- 
-Our basic stratege is based on the tutorial given by [https://github.com/pirobot/rbx1](https://github.com/pirobot/rbx1)
-Details of our stratege:
+Our basic strategy is based on the tutorial given by [https://github.com/pirobot/rbx1](https://github.com/pirobot/rbx1)
+Details of our strategy:
 
 -  Initialize the start position (x,y,z) of the 'Robber' robot and the standard distance between the 'Cop' robot and 'Robber' robot (i.e. g_std_dist = 0.8m)
 - Define a search box in front of the robot.
