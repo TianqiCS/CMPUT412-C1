@@ -40,26 +40,25 @@ Follow state: It will follow the target as expected`
 Our basic stratege is based on the tutorial given by [https://github.com/pirobot/rbx1](https://github.com/pirobot/rbx1)
 Details of our stratege:
 
-● Initialize the start position (x,y,z) of the 'Robber' robot and the standard distance between the 'Cop' robot and 'Robber' robot (i.e. g_std_dist = 0.8m)
-● Define a search box in front of the robot.
-● 'Cop' robot goes to 'Wait' state and waits for joystick command.
-● Once command received, 'Cop' robot switches to 'Search' State.
+-  Initialize the start position (x,y,z) of the 'Robber' robot and the standard distance between the 'Cop' robot and 'Robber' robot (i.e. g_std_dist = 0.8m)
+- Define a search box in front of the robot.
+- 'Cop' robot goes to 'Wait' state and waits for joystick command.
+- Once command received, 'Cop' robot switches to 'Search' State.
 WHILE not manually shutdown do:
-● Filter out points that are not in the clouds. 
-● Filter again evenly to get less points for calculation.
-● With these filtered points do:
-○ Compute the centroid of the region e.g. avg of x, z value of filtered
-points
-○ If the any centroid value is not NULL (robot has found an object to track), switch to 'Follow' tate
-● Compute linear and augular speed to keep the robot following to the 'Robber'
-● Publish the speed to move the robot or stop
-■ Z-coordinate indicates the distance to the object
-■ X-coordinate indicates if the object is on the front left or front right of the robot
-■ In 'Search' state or 'Follow' state, 'Cop' robot switches to 'Wait' state whenever joystick command is received 
-■ In 'Follow' state, zero centroid z values will cause 'Cop' Robot switch 'Search' state.
+- Filter out points that are not in the clouds. 
+- Filter again evenly to get less points for calculation.
+- With these filtered points do:
+	- Compute the centroid of the region e.g. avg of x, z value of filtered points
+	- If the any centroid value is not NULL (robot has found an object to track), switch to 'Follow' tate
+- Compute linear and augular speed to keep the robot following to the 'Robber'
+- Publish the speed to move the robot or stop
+#### Reminds
+- Z-coordinate indicates the distance to the object
+- X-coordinate indicates if the object is on the front left or front right of the robot
+- In 'Search' state or 'Follow' state, 'Cop' robot switches to 'Wait' state whenever joystick command is received 
+- In 'Follow' state, zero centroid z values will cause 'Cop' Robot switch 'Search' state.
 
-Besides we add some more features:
-- there are three states in total in this state machine: wait, search and follow 
-- if the target is lost, the robot will automatically turn left trying to find the target.
-- the target is 1.3m away or further, the robot will accelerate faster.
+#### Other features:
+- If the target is lost, the robot will automatically turn left trying to find the target.
+- The target is 1.3 meters away or further, the robot will accelerate faster.
 
