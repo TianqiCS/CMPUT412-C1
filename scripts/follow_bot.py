@@ -129,7 +129,7 @@ class Follow(smach.State):
         # How far away from the goal distance (in meters) before the robot reacts
         self.z_threshold = rospy.get_param("~z_threshold", 0.05)
 
-        self.z_sec_threshold = rospy.get_param("~z_sec_threshold", 1.3)
+        self.z_sec_threshold = rospy.get_param("~z_sec_threshold", 1.4)
         
         # How far away from being centered (x displacement) on the person
         # before the robot reacts
@@ -206,7 +206,7 @@ class Follow(smach.State):
 def main():
     global g_cmd_vel_pub, g_std_dist, g_running
 
-    g_std_dist = 0.8
+    g_std_dist = 1.0
     g_running = True
 
     rospy.init_node('follow_bot')
