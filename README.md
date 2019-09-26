@@ -37,22 +37,22 @@ Follow state: It will follow the target as expected`
 
 - ***Concepts and Code***
 	- 
-Our code is based on the tutorial given by [https://github.com/pirobot/rbx1](https://github.com/pirobot/rbx1)
-It is the following method based on the pointcloud2. The basic algorithm is:
+Our basic stratege is based on the tutorial given by [https://github.com/pirobot/rbx1](https://github.com/pirobot/rbx1)
+Details of our stratege:
 
 ● Initialize the position (x,y,z) of the tracking object
-● Define a search box in front of the robot
-● Define how close the robot should be to the object (i.e. close = goal position)
-WHILE not shutdown do:
-● Sample all the points in the point cloud within the searchBox
-● With these search points do:
-○ Compute the centroid of the region e.g. avg of x, y,  z value of search
+● Define a search box in front of the robot, filter out points that are not in the clouds. 
+● Filter again evenly to get less points for calculation.
+● Define standard distance between the 'Cop' robot and 'Robber' robot (i.e. g_std_dist = 0.8m)
+WHILE not manually shutdown do:
+● With these filtered points do:
+○ Compute the centroid of the region e.g. avg of x, z value of filtered
 points
-○ If the centroid is not NULL (robot has found an object to track)
-■ Z-coordinate is the distance to the object
-■ X-coordinate says if the object is left or right of the robot
-■ Compute Twist message to keep the robot close to the object
-● Move the robot or stop
+○ If the any centroid value is not NULL (robot has found an object to track)
+■ Z-coordinate indicates the distance to the object
+■ X-coordinate indicates if the object is on the front left or front right of the robot
+■ Compute linear and augular speed to keep the robot following to the 'Robber'
+● Publish the speed to move the robot or stop
 
 Besides we add some more features:
 - there are three states in total in this state machine: wait, search and follow 
