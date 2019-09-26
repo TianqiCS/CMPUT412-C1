@@ -58,6 +58,9 @@ WHILE not manually shutdown do:
 - In 'Search' state or 'Follow' state, 'Cop' robot switches to 'Wait' state whenever joystick command is received 
 - In 'Follow' state, zero centroid z values will cause 'Cop' Robot switch 'Search' state.
 
+#### State Machine Graph
+![](StateMachineView.png)
+
 #### Other features:
 - If the target is lost, the robot will automatically turn left trying to find the target.
 - The target is 1.3 meters away or further, the robot will accelerate faster.
