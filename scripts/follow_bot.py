@@ -3,6 +3,8 @@ import rospy
 import smach
 import smach_ros
 import math
+import ctypes
+import struct
 import time
 from math import copysign
 from geometry_msgs.msg import Twist
@@ -23,6 +25,20 @@ def joy_callback(joy_msg):
     if joy_msg.buttons[5] == 1:
         g_running = not g_running
 
+def filterColor(point):
+    rgb_packed = point[3]
+
+    # cast float32 to int so that bitwise operations are possible
+    s = struct.pack('>f' ,rgb_packed)
+    i = struct.unpack('>l',s)[0]
+    # you can get back the float value by the inverse operations
+    pack = ctypes.c_uint32(i).value
+    pt_r = (pack & 0x00FF0000)>> 16
+    pt_g = (pack & 0x0000FF00)>> 8
+    pt_b = (pack & 0x000000FF)
+
+    return approxEqual(pt_r, 0, 20) and approxEqual(pt_g, 0, 20) and approxEqual(pt_b, 0, 20)
+
 def PC2_callback(msg):
     global g_x, g_z, g_std_dist
     
@@ -30,10 +46,25 @@ def PC2_callback(msg):
     x = z = n = 0
 
     # Read in the x, y, z coordinates of all points in the cloud
-    for point in point_cloud2.read_points(msg, skip_nans=True):
+    for point in filter(filterColor,point_cloud2.read_points(msg, skip_nans=True)):
+    #for point in point_cloud2.read_points(msg, skip_nans=True)
         pt_x = point[0]
         #pt_y = point[1]
         pt_z = point[2]
+
+        # rgb_packed = point[3] 
+        # # cast float32 to int so that bitwise operations are possible
+        # s = struct.pack('>f' ,rgb_packed)
+        # i = struct.unpack('>l',s)[0]
+        # # you can get back the float value by the inverse operations
+        # pack = ctypes.c_uint32(i).value
+        # pt_r = (pack & 0x00FF0000)>> 16
+        # pt_g = (pack & 0x0000FF00)>> 8
+        # pt_b = (pack & 0x000000FF)
+        # print pt_x, pt_z, pt_r, pt_g, pt_b
+        #rospy.loginfo('Point: x: {0}, z{2}, r:{3}, g:{4}, b:{5}'.format(pt_x, pt_z, pt_r, pt_g, pt_b))
+
+
 
         x += pt_x
         #y += pt_y
@@ -73,11 +104,17 @@ class Search(smach.State):
     def __init__(self):
         smach.State.__init__(self, 
                              outcomes=['follow'])
+        self.move_cmd = Twist()
+        self.move_cmd.angular.z = 3.0
 
     def execute(self, userdata):
+        global g_cmd_vel_pub
+
+
         while g_z == 0:
-            pass
+            g_cmd_vel_pub.publish(self.move_cmd)
         return 'follow'    
+        
         
 
 class Follow(smach.State):
@@ -91,6 +128,8 @@ class Follow(smach.State):
         
         # How far away from the goal distance (in meters) before the robot reacts
         self.z_threshold = rospy.get_param("~z_threshold", 0.05)
+
+        self.z_sec_threshold = rospy.get_param("~z_sec_threshold", 1.3)
         
         # How far away from being centered (x displacement) on the person
         # before the robot reacts
@@ -109,7 +148,7 @@ class Follow(smach.State):
         self.min_angular_speed = rospy.get_param("~min_angular_speed", 0.0)
         
         # The max linear speed in meters per second
-        self.max_linear_speed = rospy.get_param("~max_linear_speed", 0.3)
+        self.max_linear_speed = rospy.get_param("~max_linear_speed", 1.0)
         
         # The minimum linear speed in meters per second
         self.min_linear_speed = rospy.get_param("~min_linear_speed", 0.1)
@@ -125,8 +164,11 @@ class Follow(smach.State):
             if g_x!=0 or g_z!=0:
                 # Check our movement thresholds
                 if (abs(g_z - g_std_dist) > self.z_threshold):
-                    # Compute the angular component of the movement
-                    linear_speed = (g_z - g_std_dist) * self.z_scale
+                    if (abs(g_z - g_std_dist) > self.z_sec_threshold):
+                        linear_speed = (g_z - g_std_dist) * self.z_scale * 2
+                    else:
+                        # Compute the angular component of the movement
+                        linear_speed = (g_z - g_std_dist) * self.z_scale
                     
                     # Make sure we meet our min/max specifications
                     self.move_cmd.linear.x = copysign(max(self.min_linear_speed, 
