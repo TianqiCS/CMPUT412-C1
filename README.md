@@ -9,16 +9,23 @@
 	The project is built with python2.7 on Ubuntu 16.04.
 	Dependencies include ROS kinetic package, smach state machine, and other drivers for the turtle bot sensor. If these are not installed please refer to the official installation page on ROS wiki or official python installation websites.
 	
-- http://wiki.ros.org/kobuki/Tutorials/Installation/kinetic
-- http://wiki.ros.org/kinetic/Installationu 
-- https://www.python.org/downloads/
+- Kobuki http://wiki.ros.org/kobuki/Tutorials/Installation/kinetic
+- Ros-Kinetic http://wiki.ros.org/kinetic/Installationu 
+- Python2 https://www.python.org/downloads/
+- Smach http://wiki.ros.org/smach
 
 	The source code of the project can be found at [https://github.com/TianqiCS/CMPUT412-C1](https://github.com/TianqiCS/CMPUT412-C1)
 	Create or navigate the existing catkin workspace and clone our repository.
 
 -  ***Execution***
 	- 
-	Once you have the package in your workspace, you can launch the program using 
+	Once you have the package in your workspace
+	```
+	cd catkin_ws
+	catkin_make
+	source devel/setup.bash
+	```
+	now you can launch the program using 
 	```
 	$roslaunch follow_bot follow_bot_real.launch
 	```
