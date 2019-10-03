@@ -59,18 +59,20 @@ WHILE not manually shutdown do:
 	- If the any centroid value is not NULL (robot has found an object to track), switch to 'Follow' tate
 - Compute linear and augular speed to keep the robot following to the 'Robber'
 - Publish the speed to move the robot or stop
-#### Reminds
+####  Notes
 - Z-coordinate indicates the distance to the object
 - X-coordinate indicates if the object is on the front left or front right of the robot
 - In 'Search' state or 'Follow' state, 'Cop' robot switches to 'Wait' state whenever joystick command is received 
 - In 'Follow' state, zero centroid z values will cause 'Cop' Robot switch 'Search' state.
 - If the target is lost, the robot will automatically turn left trying to find the target.
 - The target is 1.3 meters away or further, the robot will accelerate faster.
+- We used P-Control only and there are two factors, when the error is more than a certain amount, bigger 
+  factor applied.
 
-#### State Machine Graph
+####  State Machine Graph
 ![](StateMachineView.png)
 
-#### Other tried features (not implemented in master):
+####  Other tried features (not implemented in master):
 - Since our 'Robber' is running clockwise, we can weight left points x values more, right points x values less. We tried to create x_weight by scaling x values in between 1 and 0 form left to right. Failed reason: when turning left, calculation caused lag and the robot lost target view right away, it's hard to balance several parameters.
 - To avoid walls, doors and other stuff, we can weight closer point more, farther point less by multiplying scaled z values with x when calculating centroid x value. 
 
