@@ -1,3 +1,4 @@
+#This file is for controlinng robot using joystick. Not necessary for competition.
 #!/usr/bin/env python
 import rospy
 import smach
